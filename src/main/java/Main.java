@@ -25,7 +25,6 @@ public class Main {
                 } catch (IOException e) {
                     throw new RuntimeException("Не удалось прочитать файл с настройками");
                 }
-                System.out.println(properties.getProperty(name));
                 return properties.getProperty(name);
             }
         }

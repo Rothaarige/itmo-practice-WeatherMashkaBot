@@ -55,12 +55,7 @@ public class Bot extends TelegramLongPollingBot {
                 if (weatherFromMessage == null || forecastFromMessage == null) {
                     text = "Извини, что-то пошло не так с определением координат";
                 } else {
-                    text = String.format("Погодка:\nГородок: %s\nТекущая температурка: %.1f%s\n" +
-                                    "Завтра ожидается от %.1f%s до %.1f%s",
-                            weatherFromMessage.getName(), weatherFromMessage.getMain().getTemp(), CELSIUS,
-                            //       15.2, 16.2);
-                            forecastFromMessage.getList().get(0).getMain().getTempMin(), CELSIUS,
-                            forecastFromMessage.getList().get(9).getMain().getTempMax(), CELSIUS);
+                    text = getWeatherAndForecast(weatherFromMessage, forecastFromMessage);
                 }
                 sendMsg(message, text);
             } else if (message.hasText()) {
@@ -86,11 +81,7 @@ public class Bot extends TelegramLongPollingBot {
                         if (weatherFromMessage == null || forecastFromMessage == null) {
                             text = "Я не понимать :(";
                         } else {
-                            text = String.format("Погодка:\nГородок: %s\nТекущая температурка: %.1f%s\n" +
-                                            "Завтра ожидается от %.1f%s до %.1f%s",
-                                    weatherFromMessage.getName(), weatherFromMessage.getMain().getTemp(), CELSIUS,
-                                    forecastFromMessage.getList().get(0).getMain().getTempMin(), CELSIUS,
-                                    forecastFromMessage.getList().get(9).getMain().getTempMax(), CELSIUS);
+                            text = getWeatherAndForecast(weatherFromMessage, forecastFromMessage);
                         }
                         sendMsg(message, text);
                 }
@@ -177,5 +168,20 @@ public class Bot extends TelegramLongPollingBot {
             throw new RuntimeException("Ошибка чтения данных с URL");
         }
         return forecastJSON;
+    }
+
+    private String getWeatherAndForecast(WeatherJSON weatherFromMessage, ForecastJSON forecastFromMessage) {
+        String text;
+
+
+        text = String.format("Погодка сейчас:\nГородок: %s\nТекущая температурка: %.1f%s\n" +
+                        "" +
+                        "Завтра ожидается от %.1f%s до %.1f%s",
+                weatherFromMessage.getName(), weatherFromMessage.getMain().getTemp(), CELSIUS,
+                forecastFromMessage.getList().get(0).getMain().getTempMin(), CELSIUS,
+                forecastFromMessage.getList().get(9).getMain().getTempMax(), CELSIUS);
+
+
+        return text;
     }
 }
