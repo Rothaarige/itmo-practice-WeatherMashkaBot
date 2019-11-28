@@ -20,6 +20,7 @@ import java.util.Properties;
 public class Bot extends TelegramLongPollingBot {
     private String botToken;
     private String apiOwm;
+    private String botName;
     private final static String URL_PATH = "http://api.openweathermap.org/data/2.5/";
     private final static String URL_WEATHER_TEMPLATE = URL_PATH + "weather?%s&units=metric&lang=ru&appid=%s";
     private final static String URL_FORECAST_TEMPLATE = URL_PATH + "forecast?%s&units=metric&lang=ru&appid=%s";
@@ -28,8 +29,10 @@ public class Bot extends TelegramLongPollingBot {
     private final static String CROSS_MARK = "\u274C";
     private final static String CELSIUS = "\u2103";
 
-    public Bot() {
-
+    public Bot(String botToken, String apiOwm, String botName) {
+        this.botToken = botToken;
+        this.apiOwm = apiOwm;
+        this.botName = botName;
     }
 
     @Override
@@ -112,7 +115,7 @@ public class Bot extends TelegramLongPollingBot {
 
     @Override
     public String getBotUsername() {
-        return "Mashka_Bot";
+        return botName;
     }
 
     @Override
@@ -139,7 +142,7 @@ public class Bot extends TelegramLongPollingBot {
         replyKeyboardMarkup.setKeyboard(keyboardRowList);
     }
 
-    private static WeatherJSON getWeather(String findWeather) {
+    private WeatherJSON getWeather(String findWeather) {
         String urlAddress = String.format(URL_WEATHER_TEMPLATE, findWeather, apiOwm);
         WeatherJSON weatherJSON;
         URL url;
@@ -158,7 +161,7 @@ public class Bot extends TelegramLongPollingBot {
         return weatherJSON;
     }
 
-    private static ForecastJSON getForecast(String findWeather) {
+    private ForecastJSON getForecast(String findWeather) {
         String urlAddress = String.format(URL_FORECAST_TEMPLATE, findWeather, apiOwm);
         ForecastJSON forecastJSON;
         URL url;
