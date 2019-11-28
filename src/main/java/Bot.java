@@ -1,4 +1,5 @@
 import com.google.gson.Gson;
+import com.sun.org.apache.xerces.internal.impl.xpath.XPath;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Message;
@@ -13,7 +14,9 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Properties;
 
@@ -28,6 +31,7 @@ public class Bot extends TelegramLongPollingBot {
     private final static String CHECK_MARK = "\u2705";
     private final static String CROSS_MARK = "\u274C";
     private final static String CELSIUS = "\u2103";
+    private final static double PRESSURE_TO_MM = 133.322d;
 
     public Bot(String botToken, String apiOwm, String botName) {
         this.botToken = botToken;
@@ -172,16 +176,59 @@ public class Bot extends TelegramLongPollingBot {
 
     private String getWeatherAndForecast(WeatherJSON weatherFromMessage, ForecastJSON forecastFromMessage) {
         String text;
+        String name = weatherFromMessage.getName();
+        double currrentTemp = weatherFromMessage.getMain().getTemp();
+        String currentDescription = weatherFromMessage.getWeather().get(0).getDescription();
+        int currentHumidity = weatherFromMessage.getMain().getHumidity();
+        double currentPressure = (weatherFromMessage.getMain().getPressure() / PRESSURE_TO_MM);
+        double speedWind = weatherFromMessage.getWind().getSpeed();
 
+        String descriptionWind;
+        if (speedWind >= 0 && speedWind <= 5) {
+            descriptionWind = "слабый";
+        } else if (speedWind >= 6 && speedWind <= 14) {
+            descriptionWind = "умеренный";
+        } else if (speedWind >= 15 && speedWind <= 24) {
+            descriptionWind = "сильный";
+        } else if (speedWind >= 25 && speedWind <= 32) {
+            descriptionWind = "очень сильный";
+        } else {
+            descriptionWind = "ураганный";
+        }
+        long data = weatherFromMessage.getDt();
+        String tomorrowData = new SimpleDateFormat("yyyy-MM-dd").format(new Date((data + 24 * 60 * 60) * 1000));
 
-        text = String.format("Погодка сейчас:\nГородок: %s\nТекущая температурка: %.1f%s\n" +
-                        "" +
-                        "Завтра ожидается от %.1f%s до %.1f%s",
-                weatherFromMessage.getName(), weatherFromMessage.getMain().getTemp(), CELSIUS,
-                forecastFromMessage.getList().get(0).getMain().getTempMin(), CELSIUS,
-                forecastFromMessage.getList().get(9).getMain().getTempMax(), CELSIUS);
+        StringBuilder forecastText = new StringBuilder();
+        for (int i = 0; i < forecastFromMessage.getList().size(); i++) {
+            String targetDate = forecastFromMessage.getList().get(i).getDtTxt();
+            if ((tomorrowData + " 00:00:00").equals(targetDate)) {
+                forecastText.append(String.format("Ночю: %.1f%s %s\n",
+                        forecastFromMessage.getList().get(i).getMain().getTemp(), CELSIUS,
+                        forecastFromMessage.getList().get(i).getWeather().get(0).getDescription()));
+            }
+            if ((tomorrowData + " 06:00:00").equals(targetDate)) {
+                forecastText.append(String.format("Утром: %.1f%s %s\n",
+                        forecastFromMessage.getList().get(i).getMain().getTemp(), CELSIUS,
+                        forecastFromMessage.getList().get(i).getWeather().get(0).getDescription()));
+            }
+            if ((tomorrowData + " 12:00:00").equals(targetDate)) {
+                forecastText.append(String.format("Днем: %.1f%s %s\n",
+                        forecastFromMessage.getList().get(i).getMain().getTemp(), CELSIUS,
+                        forecastFromMessage.getList().get(i).getWeather().get(0).getDescription()));
+            }
+            if ((tomorrowData + " 18:00:00").equals(targetDate)) {
+                forecastText.append(String.format("Вечером: %.1f%s %s\n",
+                        forecastFromMessage.getList().get(i).getMain().getTemp(), CELSIUS,
+                        forecastFromMessage.getList().get(i).getWeather().get(0).getDescription()));
+            }
+        }
 
-
+        text = String.format("Погода сейчас в %s\nТемпература: %.1f%s, %s\n" +
+                        "Влажность: %d %%, Давление %.2f мм.рт.ст\n" +
+                        "Ветер: %s: %.1f м/с\n\n" +
+                        "Завтра ожидается: \n%s",
+                name, currrentTemp, CELSIUS, currentDescription, currentHumidity, currentPressure,
+                descriptionWind, speedWind, forecastText.toString());
         return text;
     }
 }
