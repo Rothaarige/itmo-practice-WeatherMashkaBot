@@ -1,5 +1,6 @@
+import JSON.ForecastJSON;
+import JSON.WeatherJSON;
 import com.google.gson.Gson;
-import com.sun.org.apache.xerces.internal.impl.xpath.XPath;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Message;
@@ -10,7 +11,6 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.Keyboard
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -18,7 +18,6 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.Properties;
 
 public class Bot extends TelegramLongPollingBot {
     private String botToken;
@@ -41,6 +40,7 @@ public class Bot extends TelegramLongPollingBot {
 
     @Override
     public void onUpdateReceived(Update update) {
+
 //        new Thread() {
 //            @Override
 //            public void run() {
@@ -48,7 +48,7 @@ public class Bot extends TelegramLongPollingBot {
 //        }.start();
 
         Message message = update.getMessage();
-        System.out.println(message);
+//        System.out.println(message);
 
         if (message != null) {
             String text;
