@@ -1,3 +1,5 @@
+import DBService.DBService;
+import DBService.User;
 import JSON.ForecastJSON;
 import JSON.WeatherJSON;
 import com.google.gson.Gson;
@@ -31,11 +33,13 @@ public class Bot extends TelegramLongPollingBot {
     private final static String CROSS_MARK = "\u274C";
     private final static String CELSIUS = "\u2103";
     private final static double PRESSURE_TO_MM = 133.322d;
+    private DBService dbService;
 
-    public Bot(String botToken, String apiOwm, String botName) {
+    public Bot(String botToken, String apiOwm, String botName, DBService dbService) {
         this.botToken = botToken;
         this.apiOwm = apiOwm;
         this.botName = botName;
+        this.dbService = dbService;
     }
 
     @Override
@@ -51,6 +55,13 @@ public class Bot extends TelegramLongPollingBot {
 //        System.out.println(message);
 
         if (message != null) {
+
+            User user = dbService.getUserByChatID(message.getChatId());
+            if (user == null){
+                user = new User(message);
+                dbService.addUser(user);
+            }
+
             String text;
             if (message.hasLocation()) {
                 String coordinate = String.format("lat=%f&lon=%f", message.getLocation().getLatitude(),
@@ -130,8 +141,11 @@ public class Bot extends TelegramLongPollingBot {
         List<KeyboardRow> keyboardRowList = new ArrayList<>();
         KeyboardRow keyboardFirstRow = new KeyboardRow();
 
-        keyboardFirstRow.add(new KeyboardButton(String.format("%s хочу получать погоду", CHECK_MARK)));
-        keyboardFirstRow.add(new KeyboardButton(String.format("%s надоели присылать", CROSS_MARK)));
+//        keyboardFirstRow.add(new KeyboardButton(String.format("%s хочу получать погоду", CHECK_MARK)));
+//        keyboardFirstRow.add(new KeyboardButton(String.format("%s надоели присылать", CROSS_MARK)));
+
+        keyboardFirstRow.add(new KeyboardButton("/subscribe"));
+        keyboardFirstRow.add(new KeyboardButton("/unsubscribe"));
 
         keyboardRowList.add(keyboardFirstRow);
 
