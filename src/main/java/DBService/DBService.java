@@ -9,6 +9,9 @@ import org.hibernate.cfg.Configuration;
 import org.hibernate.query.Query;
 import org.hibernate.service.ServiceRegistry;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class DBService {
     private final SessionFactory sessionFactory;
 
@@ -66,6 +69,22 @@ public class DBService {
         }
     }
 
+    public List<User> getSubscribeUsers() {
+        List<User> userList;
+        Session session = sessionFactory.openSession();
+        Transaction transaction = session.beginTransaction();
+        Query query = session.createSQLQuery("select * from telegram.users").addEntity(User.class);
+        userList = query.getResultList();
+        try {
+            return userList;
+        } catch (Exception e) {
+            return null;
+        } finally {
+            transaction.commit();
+            session.close();
+        }
+    }
+
     public void deleteUser(User user) {
         Session session = sessionFactory.openSession();
         Transaction transaction = session.beginTransaction();
@@ -75,7 +94,8 @@ public class DBService {
         transaction.commit();
         session.close();
     }
-    public  void updateUser(User user){
+
+    public void updateUser(User user) {
         Session session = sessionFactory.openSession();
         Transaction transaction = session.beginTransaction();
         session.update(user);

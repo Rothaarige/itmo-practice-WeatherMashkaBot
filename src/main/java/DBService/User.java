@@ -80,11 +80,11 @@ public class User implements Serializable {
     public void setCity(Message message) {
         this.city = message.getText();
         this.latitude = 0;
-        this.longitude=0;
+        this.longitude = 0;
     }
 
     public void setLocation(Message message) {
-        this.city ="";
+        this.city = "";
         this.latitude = message.getLocation().getLatitude();
         this.longitude = message.getLocation().getLongitude();
     }

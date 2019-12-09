@@ -13,7 +13,6 @@ public class Main {
     private static DBService dbService;
 
     public static void main(String[] args) {
-
         PropertyManager propertyManager = new PropertyManager();
         apiOwm = propertyManager.readPropertyConfig(API_OWM);
         botToken = propertyManager.readPropertyConfig(BOT_TOKEN);

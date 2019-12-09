@@ -20,6 +20,9 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 public class Bot extends TelegramLongPollingBot {
     private String botToken;
@@ -41,6 +44,9 @@ public class Bot extends TelegramLongPollingBot {
         this.apiOwm = apiOwm;
         this.botName = botName;
         this.dbService = dbService;
+
+        ScheduledExecutorService service = Executors.newSingleThreadScheduledExecutor();
+        service.scheduleAtFixedRate(sendNotification, 0, 5, TimeUnit.MINUTES);
     }
 
     @Override
@@ -122,7 +128,6 @@ public class Bot extends TelegramLongPollingBot {
                         sendMsg(message, text);
                 }
             }
-
         }
     }
 
@@ -160,9 +165,6 @@ public class Bot extends TelegramLongPollingBot {
 
         List<KeyboardRow> keyboardRowList = new ArrayList<>();
         KeyboardRow keyboardFirstRow = new KeyboardRow();
-
-//        keyboardFirstRow.add(new KeyboardButton(String.format("%s хочу получать погоду", CHECK_MARK)));
-//        keyboardFirstRow.add(new KeyboardButton(String.format("%s надоели присылать", CROSS_MARK)));
 
         keyboardFirstRow.add(new KeyboardButton("/subscribe"));
         keyboardFirstRow.add(new KeyboardButton("/unsubscribe"));
@@ -259,11 +261,52 @@ public class Bot extends TelegramLongPollingBot {
         }
 
         text = String.format("Погода сейчас в %s\nТемпература: %.1f%s, %s\n" +
-                        "Влажность: %d %%, Давление %.2f мм.рт.ст\n" +
+                        "Влажность: %d %%,\n" +
+                        "Давление %.2f мм.рт.ст\n" +
                         "Ветер: %s: %.1f м/с\n\n" +
                         "Завтра ожидается: \n%s",
                 name, currrentTemp, CELSIUS, currentDescription, currentHumidity, currentPressure,
                 descriptionWind, speedWind, forecastText.toString());
         return text;
+    }
+
+    private Runnable sendNotification = new Runnable() {
+        @Override
+        public void run() {
+            sendToAllSubscribeUsers();
+        }
+    };
+
+    public void sendToAllSubscribeUsers() {
+        List<User> userList = dbService.getSubscribeUsers();
+        if (userList != null) {
+            for (User user : userList) {
+                sendForecast(user);
+            }
+        }
+    }
+
+    public void sendForecast(User user) {
+        long chatID = user.getChatId();
+        WeatherJSON weatherFromMessage;
+        ForecastJSON forecastFromMessage;
+        if (user.getLatitude() != 0 && user.getLongitude() != 0) {
+            String coordinate = String.format("lat=%f&lon=%f", user.getLatitude(),
+                    user.getLongitude());
+            weatherFromMessage = getWeather(coordinate);
+            forecastFromMessage = getForecast(coordinate);
+        } else {
+            weatherFromMessage = getWeather("q=" + user.getCity());
+            forecastFromMessage = getForecast("q=" + user.getCity());
+        }
+
+        SendMessage send = new SendMessage();
+        send.setChatId(chatID);
+        send.setText(getWeatherAndForecast(weatherFromMessage, forecastFromMessage));
+        try {
+            execute(send);
+        } catch (TelegramApiException e) {
+            e.printStackTrace();
+        }
     }
 }
