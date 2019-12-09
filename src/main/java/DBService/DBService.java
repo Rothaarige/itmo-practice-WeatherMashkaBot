@@ -1,17 +1,13 @@
 package DBService;
 
 import Property.PropertyManager;
-import org.hibernate.Criteria;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.Configuration;
-import org.hibernate.criterion.Restrictions;
 import org.hibernate.query.Query;
 import org.hibernate.service.ServiceRegistry;
-
-import javax.jws.soap.SOAPBinding;
 
 public class DBService {
     private final SessionFactory sessionFactory;
@@ -52,19 +48,17 @@ public class DBService {
 
         transaction.commit();
         session.close();
-        //return idUser;
     }
 
     public User getUserByChatID(long chatID) {
         Session session = sessionFactory.openSession();
         Transaction transaction = session.beginTransaction();
 
-        Query query= session.createSQLQuery(String.format("select * from telegram.users " +
+        Query query = session.createSQLQuery(String.format("select * from telegram.users " +
                 "where users.ChatId = %s", Long.toString(chatID))).addEntity(User.class);
         try {
-            return  (User) query.getResultList().get(0);
-        }
-        catch (Exception e){
+            return (User) query.getResultList().get(0);
+        } catch (Exception e) {
             return null;
         } finally {
             transaction.commit();
@@ -72,4 +66,20 @@ public class DBService {
         }
     }
 
+    public void deleteUser(User user) {
+        Session session = sessionFactory.openSession();
+        Transaction transaction = session.beginTransaction();
+
+        session.delete(user);
+
+        transaction.commit();
+        session.close();
+    }
+    public  void updateUser(User user){
+        Session session = sessionFactory.openSession();
+        Transaction transaction = session.beginTransaction();
+        session.update(user);
+        transaction.commit();
+        session.close();
+    }
 }

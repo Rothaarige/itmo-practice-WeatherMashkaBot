@@ -27,32 +27,24 @@ public class User implements Serializable {
     @Column(name = "City")
     private String city;
     @Column(name = "Latitude")
-   private float latitude;
+    private float latitude;
     @Column(name = "Longitude")
     private float longitude;
 
-    public User(){
+    public User() {
     }
 
     public User(Message message) {
-//        this.setId(-1);
         this.firstName = message.getFrom().getFirstName();
         this.lastName = message.getFrom().getLastName();
         this.userName = message.getFrom().getUserName();
-
         this.chatId = message.getChatId();
-
-        if (message.hasLocation()){
-            this.latitude = message.getLocation().getLatitude();
-            this.longitude = message.getLocation().getLongitude();
-        } else {
-            this.city = message.getText();
-        }
     }
 
     public void setId(long id) {
         this.userID = id;
     }
+
     public long getUserID() {
         return userID;
     }
@@ -84,6 +76,19 @@ public class User implements Serializable {
     public float getLongitude() {
         return longitude;
     }
+
+    public void setCity(Message message) {
+        this.city = message.getText();
+        this.latitude = 0;
+        this.longitude=0;
+    }
+
+    public void setLocation(Message message) {
+        this.city ="";
+        this.latitude = message.getLocation().getLatitude();
+        this.longitude = message.getLocation().getLongitude();
+    }
+
 
     @Override
     public String toString() {

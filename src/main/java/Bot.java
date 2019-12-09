@@ -34,6 +34,7 @@ public class Bot extends TelegramLongPollingBot {
     private final static String CELSIUS = "\u2103";
     private final static double PRESSURE_TO_MM = 133.322d;
     private DBService dbService;
+    private boolean isSubscribe = false;
 
     public Bot(String botToken, String apiOwm, String botName, DBService dbService) {
         this.botToken = botToken;
@@ -50,16 +51,13 @@ public class Bot extends TelegramLongPollingBot {
 //            public void run() {
 //            }
 //        }.start();
-
+        User user;
         Message message = update.getMessage();
-//        System.out.println(message);
 
         if (message != null) {
-
-            User user = dbService.getUserByChatID(message.getChatId());
-            if (user == null){
+            user = dbService.getUserByChatID(message.getChatId());
+            if (user == null) {
                 user = new User(message);
-                dbService.addUser(user);
             }
 
             String text;
@@ -71,7 +69,14 @@ public class Bot extends TelegramLongPollingBot {
                 if (weatherFromMessage == null || forecastFromMessage == null) {
                     text = "Извини, что-то пошло не так с определением координат";
                 } else {
-                    text = getWeatherAndForecast(weatherFromMessage, forecastFromMessage);
+                    if (isSubscribe) {
+                        text = "Теперь вы каждый день будете получать рассылку";
+                        user.setLocation(message);
+                        dbService.updateUser(user);
+                        isSubscribe = false;
+                    } else {
+                        text = getWeatherAndForecast(weatherFromMessage, forecastFromMessage);
+                    }
                 }
                 sendMsg(message, text);
             } else if (message.hasText()) {
@@ -84,11 +89,19 @@ public class Bot extends TelegramLongPollingBot {
                         sendMsg(message, text);
                         break;
                     case "/subscribe":
-                        text = "Теперь вы каждый день будете получать рассылку";
+                        if (dbService.getUserByChatID(message.getChatId()) == null) {
+                            dbService.addUser(user);
+                        } else {
+                            dbService.updateUser(user);
+                        }
+                        text = "Вы хотите подписаться \nПожалуйста отправте город или координаты";
+                        isSubscribe = true;
                         sendMsg(message, text);
                         break;
                     case "/unsubscribe":
+
                         text = "Вы отказались от рассылки";
+                        dbService.deleteUser(user);
                         sendMsg(message, text);
                         break;
                     default:
@@ -97,7 +110,14 @@ public class Bot extends TelegramLongPollingBot {
                         if (weatherFromMessage == null || forecastFromMessage == null) {
                             text = "Я не понимать :(";
                         } else {
-                            text = getWeatherAndForecast(weatherFromMessage, forecastFromMessage);
+                            if (isSubscribe) {
+                                user.setCity(message);
+                                dbService.updateUser(user);
+                                text = "Теперь вы каждый день будете получать рассылку";
+                                isSubscribe = false;
+                            } else {
+                                text = getWeatherAndForecast(weatherFromMessage, forecastFromMessage);
+                            }
                         }
                         sendMsg(message, text);
                 }
